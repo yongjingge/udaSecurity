@@ -1,8 +1,6 @@
-package com.udacity.catpoint.data;
-
+package com.udacity.catpoint.security.data;
 
 import com.google.common.collect.ComparisonChain;
-
 import java.util.Objects;
 import java.util.UUID;
 
