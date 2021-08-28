@@ -1,4 +1,4 @@
-module image {
+module com.udacity.catpoint.image {
     requires software.amazon.awssdk.auth;
     requires software.amazon.awssdk.core;
     requires software.amazon.awssdk.regions;

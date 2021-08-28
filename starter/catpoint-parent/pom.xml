@@ -12,6 +12,9 @@
     <pluginRepository>
       <id>apache.snapshots</id>
       <url>https://repository.apache.org/snapshots/</url>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
     </pluginRepository>
   </pluginRepositories>
 
