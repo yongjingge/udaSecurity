@@ -10,6 +10,7 @@ import com.udacity.catpoint.security.data.Sensor;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Service that receives information about changes to the security system. Responsible for
@@ -23,6 +24,7 @@ public class SecurityService {
     private ImageService imageService;
     private SecurityRepository securityRepository;
     private Set<StatusListener> statusListeners = new HashSet<>();
+    private Boolean catDected = false;
 
     public SecurityService(SecurityRepository securityRepository, ImageService imageService) {
         this.securityRepository = securityRepository;
@@ -35,10 +37,23 @@ public class SecurityService {
      * @param armingStatus
      */
     public void setArmingStatus(ArmingStatus armingStatus) {
-        if(armingStatus == ArmingStatus.DISARMED) {
+        if (catDected && armingStatus == ArmingStatus.ARMED_HOME) {
+            setAlarmStatus(AlarmStatus.ALARM);
+        }
+
+        if (armingStatus == ArmingStatus.DISARMED) {
             setAlarmStatus(AlarmStatus.NO_ALARM);
+        } else {
+            ConcurrentSkipListSet<Sensor> sensors = new ConcurrentSkipListSet<>(getSensors());
+            sensors.forEach(s -> changeSensorActivationStatus(s, false));
         }
         securityRepository.setArmingStatus(armingStatus);
+        statusListeners.forEach(StatusListener::sensorStatusChanged);
+
+//        if(armingStatus == ArmingStatus.DISARMED) {
+//            setAlarmStatus(AlarmStatus.NO_ALARM);
+//        }
+//        securityRepository.setArmingStatus(armingStatus);
     }
 
     /**
@@ -47,6 +62,8 @@ public class SecurityService {
      * @param cat True if a cat is detected, otherwise false.
      */
     private void catDetected(Boolean cat) {
+        catDected = cat;
+
         if(cat && getArmingStatus() == ArmingStatus.ARMED_HOME) {
             setAlarmStatus(AlarmStatus.ALARM);
         } else {
@@ -103,16 +120,39 @@ public class SecurityService {
     /**
      * Change the activation status for the specified sensor and update alarm status if necessary.
      * @param sensor
+     */
+    public void changeSensorActivationStatus(Sensor sensor) {
+        AlarmStatus alarmStatus = securityRepository.getAlarmStatus();
+        ArmingStatus armingStatus = securityRepository.getArmingStatus();
+        if (alarmStatus == AlarmStatus.PENDING_ALARM && !sensor.getActive()) {
+            handleSensorDeactivated();
+        } else if (alarmStatus == AlarmStatus.ALARM && armingStatus == ArmingStatus.DISARMED) {
+            handleSensorDeactivated();
+        }
+        securityRepository.updateSensor(sensor);
+    }
+
+    /**
+     * Change the activation status for the specified sensor and update alarm status if necessary.
+     * @param sensor
      * @param active
      */
     public void changeSensorActivationStatus(Sensor sensor, Boolean active) {
-        if(!sensor.getActive() && active) {
-            handleSensorActivated();
-        } else if (sensor.getActive() && !active) {
-            handleSensorDeactivated();
+        AlarmStatus alarmStatus = securityRepository.getAlarmStatus();
+        if (alarmStatus != AlarmStatus.ALARM) {
+            if (active) handleSensorActivated();
+            else if (sensor.getActive()) handleSensorDeactivated();
         }
         sensor.setActive(active);
         securityRepository.updateSensor(sensor);
+
+//        if(!sensor.getActive() && active) {
+//            handleSensorActivated();
+//        } else if (sensor.getActive() && !active) {
+//            handleSensorDeactivated();
+//        }
+//        sensor.setActive(active);
+//        securityRepository.updateSensor(sensor);
     }
 
     /**

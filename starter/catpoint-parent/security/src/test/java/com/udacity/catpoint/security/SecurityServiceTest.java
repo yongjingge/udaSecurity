@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,13 +30,13 @@ public class SecurityServiceTest {
 
     /* mock */
     @Mock
-    SecurityRepository securityRepository;
+    private SecurityRepository securityRepository;
 
     @Mock
-    ImageService imageService;
+    private ImageService imageService;
 
     @Mock
-    StatusListener statusListener;
+    private StatusListener statusListener;
 
     private Sensor getNewSensor() {
         return new Sensor(randomString, SensorType.DOOR);
@@ -53,7 +52,7 @@ public class SecurityServiceTest {
     }
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         securityService = new SecurityService(securityRepository, imageService);
         sensor = getNewSensor();
     }
@@ -62,7 +61,7 @@ public class SecurityServiceTest {
 
     /* test 1 */
     @Test
-    void isArmedAndSensorActivated_setSystemToPendingAlarmStatus() {
+    public void isArmedAndSensorActivated_setSystemToPendingAlarmStatus() {
         when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.NO_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
@@ -71,7 +70,7 @@ public class SecurityServiceTest {
 
     /* test 2*/
     @Test
-    void isArmedAndSensorActivatedAndIsPending_setAlarmToAlarm() {
+    public void isArmedAndSensorActivatedAndIsPending_setAlarmToAlarm() {
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
         verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.ALARM);
@@ -79,17 +78,17 @@ public class SecurityServiceTest {
 
     /* test 3 attention */
     @Test
-    void isPendingAlarmAndAllSensorsActive_returnNoAlarmState() {
+    public void isPendingAlarmAndAllSensorsInactive_returnNoAlarmState() {
         Set<Sensor> testSensors = getAllSensors(5, false);
-        when(securityRepository.getSensors()).thenReturn(testSensors);
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
-        verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.NO_ALARM);
+        testSensors.forEach(securityService::changeSensorActivationStatus);
+        verify(securityRepository, times(5)).setAlarmStatus(AlarmStatus.NO_ALARM);
     }
 
     /* test 4 */
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void isAlarmActive_shouldChangeSensorStateNotAffectAlarmState(boolean status) {
+    public void isAlarmActive_shouldChangeSensorStateNotAffectAlarmState(boolean status) {
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
         securityService.changeSensorActivationStatus(sensor, status);
 
@@ -98,7 +97,7 @@ public class SecurityServiceTest {
 
     /* test 5 */
     @Test
-    void isSensorActive_shouldChangeSensorStateNotAffectAlarmState() {
+    public void isSensorActive_shouldChangeSensorStateNotAffectAlarmState() {
         Sensor s1 = getNewSensor();
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
         s1.setActive(true);
@@ -109,14 +108,14 @@ public class SecurityServiceTest {
     /* test 6 */
     @ParameterizedTest
     @EnumSource(value = AlarmStatus.class, names = {"NO_ALARM", "PENDING_ALARM", "ALARM"})
-    void isSensorDeactivatedWhileAreadyInactive_shouldNotChangeAlarmState(AlarmStatus alarmStatus) {
+    public void isSensorDeactivatedWhileAreadyInactive_shouldNotChangeAlarmState(AlarmStatus alarmStatus) {
         securityService.changeSensorActivationStatus(sensor, false);
         verify(securityRepository, never()).setAlarmStatus(any());
     }
 
     /* test 7 */
     @Test
-    void catImageIdentified_changeSystemToAlarmStatus() {
+    public void catImageIdentified_changeSystemToAlarmStatus() {
         when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
         securityService.processImage(mock(BufferedImage.class));
@@ -125,7 +124,7 @@ public class SecurityServiceTest {
 
     /* test 8 */
     @Test
-    void noCatImageIdentified_changeSystemToNoAlarm_shouldSensorsBeNotActive() {
+    public void noCatImageIdentified_changeSystemToNoAlarm_shouldSensorsBeNotActive() {
         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(false);
         securityService.processImage(mock(BufferedImage.class));
         Sensor s2 = getNewSensor();
@@ -135,15 +134,15 @@ public class SecurityServiceTest {
 
     /* test 9 */
     @Test
-    void systemIsDisarmed_setStatusToNoAlarm() {
+    public void systemIsDisarmed_setStatusToNoAlarm() {
         securityService.setArmingStatus(ArmingStatus.DISARMED);
         verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.NO_ALARM);
     }
 
     /* test 10 */
     @ParameterizedTest
-    @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_ANYWAY"})
-    void systemIsArmed_resetAllSensorsToInactive(ArmingStatus armingStatus) {
+    @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
+    public void systemIsArmed_resetAllSensorsToInactive(ArmingStatus armingStatus) {
         Set<Sensor> sensors = getAllSensors(5, true);
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
         when(securityRepository.getSensors()).thenReturn(sensors);
@@ -156,7 +155,7 @@ public class SecurityServiceTest {
 
     /* test 11 */
     @Test
-    void systemIsArmedHome_idendifiedCat_setAlarmStatusToAlarm() {
+    public void systemIsArmedHome_idendifiedCat_setAlarmStatusToAlarm() {
         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
         when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
         securityService.processImage(mock(BufferedImage.class));
