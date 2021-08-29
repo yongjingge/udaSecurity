@@ -162,6 +162,35 @@ public class SecurityServiceTest {
         verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.ALARM);
     }
 
+    /* tests for coverage */
+    @Test
+    public void testAddAndRemoveStatusListener() {
+        securityService.addStatusListener(statusListener);
+        securityService.removeStatusListener(statusListener);
+    }
+
+    @Test
+    public void testAddAndRemoveSensor() {
+        securityService.addSensor(sensor);
+        securityService.removeSensor(sensor);
+    }
+
+    @ParameterizedTest
+    @EnumSource(ArmingStatus.class)
+    public void testSetArmingStatus(ArmingStatus armingStatus) {
+        securityService.setArmingStatus(armingStatus);
+    }
+
+    @Test
+    public void isArmingDisarmedAndAlarmOn_shouldHandleSensor() {
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.DISARMED);
+        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+        securityService.changeSensorActivationStatus(sensor);
+        verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.PENDING_ALARM);
+    }
+
+
+
 
     /**
      * Application Requirements to Test:
