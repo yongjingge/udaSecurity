@@ -32,7 +32,7 @@
     </pluginRepositories>
 
     <dependencies>
-<!--        image-3.3.0-SNAPSHOT.jar       -->
+        <!--        image-3.3.0-SNAPSHOT.jar       -->
         <dependency>
             <groupId>com.udacity.catpoint</groupId>
             <artifactId>image</artifactId>
@@ -53,12 +53,12 @@
             <version>30.1.1-jre</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.miglayout/miglayout -->
-        <dependency>
-            <groupId>com.miglayout</groupId>
-            <artifactId>miglayout</artifactId>
-            <version>3.7.4</version>
-        </dependency>
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/com.miglayout/miglayout &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>com.miglayout</groupId>-->
+<!--            <artifactId>miglayout</artifactId>-->
+<!--            <version>3.7.4</version>-->
+<!--        </dependency>-->
 
         <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
         <dependency>
